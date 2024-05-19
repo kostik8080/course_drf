@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def send_telegram_task():
-    habits = Habit.objects.filter(period='Каждый день')
+    habits = Habit.objects.filter(period='Каждый день').exclude(user__chat_id=None)
     for habit in habits:
         time_max = datetime.now() + timedelta(seconds=30)
         time_min = datetime.now() - timedelta(seconds=30)
@@ -21,7 +21,7 @@ def send_telegram_task():
 
 @shared_task
 def send_telegram_task_weekly():
-    habits = Habit.objects.filter(period='Раз в неделю')
+    habits = Habit.objects.filter(period='Раз в неделю').exclude(user__chat_id=None)
 
     for habit in habits:
 
@@ -49,7 +49,7 @@ def send_telegram_task_weekly():
 def send_telegram_several_task():
     habits = Habit.objects.filter(
         period='Несколько дней'
-    )
+    ).exclude(user__chat_id=None)
 
     for habit in habits:
 
