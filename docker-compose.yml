@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  base:
+    build: .
+    tty: true
+    volumes:
+      - .:/course_drf
+    env_file:
+      - .env
+
+  redis:
+    image: redis:latest
+    restart: on-failure
+    expose:
+      - "6379"
+
+  db:
+    image: postgres
+    restart: on-failure
+    env_file:
+      - .env
+    expose:
+      - "5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "-c", "pg_isready -U $POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  course_drf:
+    extends:
+      service: base
+    command: >
+      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  celery:
+    extends:
+      service: base
+    command: celery -A config worker -l info -P eventlet
+    restart: on-failure
+    depends_on:
+      - redis
+      - course_drf
+      - db
+
+  celery-beat:
+    extends:
+      service: base
+    command: celery -A config beat -l info -S django
+    restart: on-failure
+    depends_on:
+      - redis
+      - course_drf
+      - db
+
+volumes:
+  pgdata:
