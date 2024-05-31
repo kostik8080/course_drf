@@ -13,6 +13,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
+from config.celery import app
 
 
 
@@ -203,6 +204,7 @@ CELERY_BEAT_SCHEDULE = {
 
 # Флаг отслеживания выполнения задач
 CELERY_TASK_TRACK_STARTED = os.getenv('CELERY_TASK_TRACK_STARTED')
+app.conf.broker_connection_retry_on_startup = True
 
 # Максимальное время на выполнение задачи
 CELERY_TASK_TIME_LIMIT = 30 * 60
